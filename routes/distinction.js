@@ -13,11 +13,11 @@ admin.initializeApp({
 const db = admin.database();
 
 const mikesample = {
-    id: 3254647,
-    date: '2024-01-28',
-    time: '12:33',
+    id: 35,
+    date: '2024-01-29',
+    time: '13:00',
     latitude: 37.5058,
-    longititude: 126.956,
+    longitude: 126.956,
     sound: 'base 64 string',
 };
 

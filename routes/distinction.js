@@ -3,22 +3,21 @@ var router = express.Router();
 
 var admin = require('firebase-admin');
 
-var serviceAccount = require('../audiopoli-28904-firebase-adminsdk-t43gt-10e01b1c11.json');
+var serviceAccount = require('../audiopoli-6b817-firebase-adminsdk-qqe2o-5863b9f7f0.json');
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    databaseURL: 'https://audiopoli-28904-default-rtdb.firebaseio.com',
+    databaseURL: 'https://audiopoli-6b817-default-rtdb.firebaseio.com',
 });
 
 const db = admin.database();
-const userRef = db.ref('/');
 
 const mikesample = {
-    id: 3254647,
-    date: '2024-01-28',
-    time: '12:33',
+    id: 35,
+    date: '2024-01-29',
+    time: '13:00',
     latitude: 37.5058,
-    longtitude: 126.956,
+    longitude: 126.956,
     sound: 'base 64 string',
 };
 
@@ -60,12 +59,18 @@ function detailToCategory(detail) {
 /* GET home page. */
 router.get('/', function (req, res, next) {
     var result = mikesample;
+    const updates = {};
+    const userRef = db.ref(`/${result.id}`);
 
     result.detail = AI_result;
     result.category = detailToCategory(AI_result);
     result.isCrime = false;
+    result.departureTime = '';
+    result.caseEndTime = '';
 
-    userRef.push(result, (error) => {
+    updates[result.id.toString()] = result;
+
+    userRef.update(result, (error) => {
         if (error) {
             console.error('Error adding user:', error);
         } else {

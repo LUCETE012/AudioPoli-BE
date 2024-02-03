@@ -3,11 +3,13 @@ var router = express.Router();
 
 var admin = require('firebase-admin');
 
-var serviceAccount = require('../audiopoli-28904-firebase-adminsdk-t43gt-10e01b1c11.json');
+// var serviceAccount = require('../audiopoli-28904-firebase-adminsdk-t43gt-10e01b1c11.json');
+var serviceAccount = require('../audiopoli-6b817-firebase-adminsdk-qqe2o-cc608bd744.json');
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    databaseURL: 'https://audiopoli-28904-default-rtdb.firebaseio.com',
+    // databaseURL: 'https://audiopoli-28904-default-rtdb.firebaseio.com',
+    databaseURL: "https://audiopoli-6b817-default-rtdb.firebaseio.com",
 });
 
 const db = admin.database();

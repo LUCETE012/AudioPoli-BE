@@ -69,62 +69,53 @@ function detailToCategory(detail) {
 
 // const upload = multer({ storage: storage });
 
+function set_default_result(req)
+{
+    var result = {
+        id: req.body.id,
+        date: req.body.date,
+        time: req.body.time,
+        latitude: req.body.latitude,
+        longtitude: req.body.longtitude,
+        sound: null,
+        detail: null,
+        category: null,
+        isCrime: null
+    };
+    return (result);
+}
+
 router.post('/', upload.single('sound'), async (req, res) => {
-    try {
-        var result = {
-            id: req.body.id,
-            date: req.body.date,
-            time: req.body.time,
-            latitude: req.body.latitude,
-            longtitude: req.body.longtitude,
-            sound: null,
-            detail: null,
-            category: null,
-            isCrime: null
-        };
+    if (!req.file)
+        console.log('File is not provided');
 
-        if (!req.file) {
-            throw new Error('File is not provided');
-        }
+    var result = set_default_result(req);
 
-        const file = bucket.file(req.file.originalname);
-        const stream = file.createWriteStream({
-          metadata: {
+    const file = bucket.file(req.file.originalname);
+    const stream = file.createWriteStream(
+        {
+            metadata: {
             contentType: req.file.mimetype,
-          },
+        },
+    });
+    stream.on('error', (error) => res.status(500).send(error));
+    stream.on('finish', async () => {
+        // 업로드된 파일의 공개 URL을 설정합니다.
+        await file.makePublic();
+        result.sound = `https://storage.googleapis.com/${bucket.name}/${file.name}`;
+        
+        result.detail = AI_result;
+        result.category = detailToCategory(AI_result);
+        result.isCrime = false;
+        
+        userRef.push(result, (error) => {
+            if (error)
+                console.error('Error adding user:', error);
+            else
+                console.log('User added successfully!');
         });
-      
-        stream.on('error', (error) => res.status(500).send(error));
-      
-        stream.on('finish', async () => {
-            // 업로드된 파일의 공개 URL을 설정합니다.
-            await file.makePublic();
-
-            // 업로드된 파일의 URL을 가져옵니다.
-            result.sound = `https://storage.googleapis.com/${bucket.name}/${file.name}`;
-            console.log(result.sound);
-            result.detail = AI_result;
-            result.category = detailToCategory(AI_result);
-            result.isCrime = false;
-
-            console.log(result);
-            // 파일 로컬 저장 위치와 이름
-            // const filePath = path.join(__dirname, 'uploads', req.file.originalname);
-            // res.send(`File saved successfully at ${filePath}`);
-
-            userRef.push(result, (error) => {
-                if (error) {
-                    console.error('Error adding user:', error);
-                } else {
-                    console.log('User added successfully!');
-                }
-            });
-        });
-        stream.end(req.file.buffer);
-    } catch (err) {
-        console.error(err);
-        res.status(500).send("An error occurred while processing your request.");
-    }
+    });
+    stream.end(req.file.buffer);
 });
 
 router.get('/', function(req, res, next) {

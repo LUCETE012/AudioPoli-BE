@@ -8,6 +8,7 @@ var admin = require('firebase-admin');
 
 // global.serviceAccount = require('../audiopoli-28904-firebase-adminsdk-t43gt-10e01b1c11.json');
 var serviceAccount = require('../audiopoli-6b817-firebase-adminsdk-qqe2o-cc608bd744.json');
+const { response } = require('../app');
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
@@ -21,101 +22,91 @@ const bucket = admin.storage().bucket();
 const upload = multer({storage: multer.memoryStorage()});
 const userRef = db.ref('/');
 
-// // multer 설정: 오디오 파일을 디스크에 저장
-// const storage = multer.diskStorage({
-//     destination: function (req, file, cb) {
-//         cb(null, 'uploads/')  // 'uploads/'는 파일을 저장할 디렉토리
-//     },
-//     filename: function (req, file, cb) {
-//         // 클라이언트에서 보낸 파일 이름을 사용
-//         cb(null, file.originalname)
-//     }
-// });
-
-const AI_result = 3;
-
 function detailToCategory(detail) {
-    switch (detail) {
-        case 1:
-        case 2:
-        case 3:
-        case 4:
-            return 1;
-            break;
-        case 5:
-        case 6:
-        case 7:
-        case 8:
-        case 9:
-            return 2;
-            break;
-        case 10:
-        case 11:
-            return 4;
-            break;
-        case 12:
-        case 13:
-            return 3;
-            break;
-        case 14:
-            return 5;
-            break;
-        case 15:
-        case 16:
-            return 6;
-            break;
-    }
+    const categoryMap = {
+        1: 1, 2: 1, 3: 1, 4: 1,
+        5: 2, 6: 2, 7: 2, 8: 2, 9: 2,
+        10: 4, 11: 4,
+        12: 3, 13: 3,
+        14: 5,
+        15: 6, 16: 6,
+    };
+    return (categoryMap[detail] || null);
 }
 
-// const upload = multer({ storage: storage });
-
-function set_default_result(req)
+function initResult(req)
 {
     var result = {
-        id: req.body.id,
+        id: Number(req.body.id),
         date: req.body.date,
         time: req.body.time,
-        latitude: req.body.latitude,
-        longtitude: req.body.longtitude,
+        latitude: Number(req.body.latitude),
+        longitude: Number(req.body.longitude),
         sound: null,
         detail: null,
         category: null,
-        isCrime: null
+        isCrime: false,
+        caseEndTime: "99:99:99",
+        departureTime: "99:99:99",
     };
     return (result);
+}
+
+function uploadToStorage(req) {
+    return new Promise((resolve, reject) => {
+        const file = bucket.file(req.file.originalname);
+        const stream = file.createWriteStream({
+            metadata: {
+                contentType: req.file.mimetype,
+            },
+        });
+        stream.on('error', (error) => {
+            reject(error); // 오류 발생 시 Promise를 reject 합니다.
+        });
+        stream.on('finish', async () => {
+            try {
+                await file.makePublic();
+                const url = `https://storage.googleapis.com/${bucket.name}/${file.name}`;
+                console.log(url);
+                resolve(url); // 파일 업로드 완료 시 URL을 resolve 합니다.
+            } catch (error) {
+                reject(error); // 오류 발생 시 Promise를 reject 합니다.
+            }
+        });
+        stream.end(req.file.buffer);
+    });
+}
+
+function uploadToAI(url)
+{
+    return (3);
+}
+
+function uploadToDashboard()
+{
+
 }
 
 router.post('/', upload.single('sound'), async (req, res) => {
     if (!req.file)
         console.log('File is not provided');
 
-    var result = set_default_result(req);
+    var result = initResult(req);
 
-    const file = bucket.file(req.file.originalname);
-    const stream = file.createWriteStream(
-        {
-            metadata: {
-            contentType: req.file.mimetype,
-        },
+    result.sound = await uploadToStorage(req);
+
+    result.detail = Number(uploadToAI(result.sound));
+    result.category = Number(detailToCategory(result.detail));
+    
+    const itemRef = userRef.child(result.id.toString());
+    itemRef.set(result, (error) => {
+        if (error) {
+            console.error('Error adding user with custom title:', error);
+        } else {
+            console.log('User added successfully with custom title!');
+        }
     });
-    stream.on('error', (error) => res.status(500).send(error));
-    stream.on('finish', async () => {
-        // 업로드된 파일의 공개 URL을 설정합니다.
-        await file.makePublic();
-        result.sound = `https://storage.googleapis.com/${bucket.name}/${file.name}`;
-        
-        result.detail = AI_result;
-        result.category = detailToCategory(AI_result);
-        result.isCrime = false;
-        
-        userRef.push(result, (error) => {
-            if (error)
-                console.error('Error adding user:', error);
-            else
-                console.log('User added successfully!');
-        });
-    });
-    stream.end(req.file.buffer);
+    res.send(result);
 });
 
 router.get('/', function(req, res, next) {

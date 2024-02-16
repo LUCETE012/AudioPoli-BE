@@ -60,11 +60,11 @@ function detailToCategory(detail) {
 router.get('/', function (req, res, next) {
     var result = mikesample;
     const updates = {};
-    const userRef = db.ref(`/${result.id}`);
+    const userRef = db.ref(`/crime/${result.id}`);
 
     result.detail = AI_result;
     result.category = detailToCategory(AI_result);
-    result.isCrime = false;
+    result.isCrime = -1;
     result.departureTime = '';
     result.caseEndTime = '';
 

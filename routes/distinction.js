@@ -1,18 +1,20 @@
 var express = require('express');
 var router = express.Router();
 
-var admin = require('firebase-admin');
+// var admin = require('firebase-admin');
 
-var serviceAccount = require('../audiopoli-6b817-firebase-adminsdk-qqe2o-5863b9f7f0.json');
+// var serviceAccount = require('../audiopoli-6b817-firebase-adminsdk-qqe2o-5863b9f7f0.json');
 
-admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    databaseURL: 'https://audiopoli-6b817-default-rtdb.firebaseio.com',
-});
+// admin.initializeApp({
+//     credential: admin.credential.cert(serviceAccount),
+//     databaseURL: 'https://audiopoli-6b817-default-rtdb.firebaseio.com',
+// });
+
+var { admin } = require('../app.js');
 
 const db = admin.database();
 
-const mikesample = {
+const micsample = {
     id: 35,
     date: '2024-01-29',
     time: '13:00',
@@ -58,7 +60,7 @@ function detailToCategory(detail) {
 
 /* GET home page. */
 router.get('/', function (req, res, next) {
-    var result = mikesample;
+    var result = micsample;
     const updates = {};
     const userRef = db.ref(`/${result.id}`);
 

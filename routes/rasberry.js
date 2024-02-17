@@ -100,11 +100,8 @@ router.post('/', upload.single('sound'), async (req, res) => {
     
     const itemRef = userRef.child(result.id.toString());
     itemRef.set(result, (error) => {
-        if (error) {
+        if (error)
             console.error('Error adding user with custom title:', error);
-        } else {
-            console.log('User added successfully with custom title!');
-        }
     });
     res.send(result);
 });

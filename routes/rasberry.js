@@ -82,11 +82,6 @@ function uploadToAI(url)
     return (3);
 }
 
-function uploadToDashboard()
-{
-
-}
-
 router.post('/', upload.single('sound'), async (req, res) => {
     if (!req.file)
         console.log('File is not provided');

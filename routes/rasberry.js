@@ -2,8 +2,10 @@ var express = require('express');
 var router = express.Router();
 var multer = require('multer');
 var path = require('path');
+const dotenv = require("dotenv");
 var {Storage} = require('@google-cloud/storage');
 
+dotenv.config();
 var admin = require('firebase-admin');
 
 // global.serviceAccount = require('../audiopoli-28904-firebase-adminsdk-t43gt-10e01b1c11.json');
@@ -77,9 +79,31 @@ function uploadToStorage(req) {
     });
 }
 
-function uploadToAI(url)
-{
-    return (3);
+async function uploadToAI(url) {
+    const fetch = (await import('node-fetch')).default;
+    const gcfURL = process.env.GCFURL;
+
+    try {
+        const response = await fetch(gcfURL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ url: url }),
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        console.log(data.result);
+        return data.result;
+    } catch (error) {
+        console.error('Error calling Cloud Function:', error);
+        throw new Error('Failed to call Cloud Function');
+    }
 }
 
 router.post('/', upload.single('sound'), async (req, res) => {
@@ -90,14 +114,15 @@ router.post('/', upload.single('sound'), async (req, res) => {
 
     result.sound = await uploadToStorage(req);
 
-    result.detail = Number(uploadToAI(result.sound));
-    result.category = Number(detailToCategory(result.detail));
+    uploadToAI(result.sound);
+    // result.detail = Number(uploadToAI(result.sound));
+    // result.category = Number(detailToCategory(result.detail));
     
-    const itemRef = userRef.child(result.id.toString());
-    itemRef.set(result, (error) => {
-        if (error)
-            console.error('Error adding user with custom title:', error);
-    });
+    // const itemRef = userRef.child(result.id.toString());
+    // itemRef.set(result, (error) => {
+    //     if (error)
+    //         console.error('Error adding user with custom title:', error);
+    // });
     res.send(result);
 });
 

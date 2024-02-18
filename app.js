@@ -3,7 +3,7 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-const dotenv = require("dotenv");
+const dotenv = require('dotenv');
 dotenv.config();
 
 var admin = require('firebase-admin');
@@ -55,5 +55,65 @@ app.use(function (err, req, res, next) {
     res.status(err.status || 500);
     res.render('error');
 });
+
+var db = admin.database();
+var ref = db.ref('/crime/');
+const messaging = admin.messaging();
+var bodyText;
+const alertMessages = [
+    '',
+    'Be aware of sexual assault, robbery, theft, and violent crimes occurring nearby, and immediately report any suspicious situations to the police.',
+    'Prepare for fires, entrapments, medical emergencies, electrical, and gas accidents by evacuating to a safe place immediately and contacting 119 if necessary.',
+    'Anticipate the risk of falls and collapses by avoiding unstable structures and strictly adhering to safety protocols.',
+    'With typhoons, strong winds, and earthquakes forecasted, stay indoors if possible and prepare emergency supplies in advance.',
+    'If you need assistance, contact 112 or 119 immediately to request urgent help.',
+];
+
+ref.on(
+    'child_changed',
+    function (snapshot) {
+        if (snapshot.val().isCrime == 1) {
+            const useRef = db.ref('/users');
+            useRef.on(
+                'value',
+                (snapshot2) => {
+                    var target_tokens = Object.keys(snapshot2.val());
+                    let message = {
+                        notification: {
+                            title: 'WARNING',
+                            body: alertMessages[snapshot.val().category],
+                        },
+                        tokens: target_tokens,
+                    };
+                    messaging
+                        .sendMulticast(message)
+                        .then((response) => {
+                            if (response.failureCount > 0) {
+                                const failedTokens = [];
+                                response.responses.forEach((resp, idx) => {
+                                    if (!resp.success) {
+                                        failedTokens.push(
+                                            registrationTokens[idx]
+                                        );
+                                    }
+                                });
+                                console.log(
+                                    'List of tokens that caused failures: ' +
+                                        failedTokens
+                                );
+                            }
+                        })
+                        .catch((error) => {});
+                },
+                (errorObject) => {
+                    console.log(errorObject.name);
+                }
+            );
+        }
+    },
+    function (errorObject) {
+        console.log('The read failed:', errorObject.code);
+    }
+);
 
 exports.app = app;

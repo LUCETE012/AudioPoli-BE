@@ -114,13 +114,17 @@ router.post('/', upload.single('sound'), async (req, res) => {
 
     result.detail = Number(await uploadToAI(result.sound));
     result.category = Number(detailToCategory(result.detail));
-    
-    const itemRef = userRef.child(result.id.toString());
-    itemRef.set(result, (error) => {
-        if (error)
-            console.error('Error adding user with custom title:', error);
-    });
-    res.send(result);
+    if (result.category != 6)
+    {
+        const itemRef = userRef.child(result.id.toString());
+        itemRef.set(result, (error) => {
+            if (error)
+                console.error('Error adding user with custom title:', error);
+        });
+        res.send(result);
+    }
+    else
+        console.log("no issue!");
 });
 
 router.get('/', function(req, res, next) {

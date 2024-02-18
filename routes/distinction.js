@@ -62,7 +62,7 @@ function detailToCategory(detail) {
 router.get('/', function (req, res, next) {
     var result = micsample;
     const updates = {};
-    const userRef = db.ref(`/${result.id}`);
+    const userRef = db.ref(`/crime/${result.id}`);
 
     result.detail = AI_result;
     result.category = detailToCategory(AI_result);

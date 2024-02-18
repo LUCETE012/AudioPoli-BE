@@ -3,12 +3,6 @@ var router = express.Router();
 
 var { admin } = require('../app.js');
 
-// var serviceAccount = require('../audiopoli-6b817-firebase-adminsdk-qqe2o-5863b9f7f0.json');
-
-// admin.initializeApp({
-//     credential: admin.credential.cert(serviceAccount),
-// });
-
 const messaging = admin.messaging();
 
 router.get('/', function (req, res, next) {

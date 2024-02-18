@@ -8,23 +8,32 @@ var { admin } = require('../app.js');
 
 const db = admin.database();
 const bucket = admin.storage().bucket();
-const upload = multer({storage: multer.memoryStorage()});
+const upload = multer({ storage: multer.memoryStorage() });
 const userRef = db.ref('/crime/');
 
 function detailToCategory(detail) {
     const categoryMap = {
-        1: 1, 2: 1, 3: 1, 4: 1,
-        5: 2, 6: 2, 7: 2, 8: 2, 9: 2,
-        10: 4, 11: 4,
-        12: 3, 13: 3,
+        1: 1,
+        2: 1,
+        3: 1,
+        4: 1,
+        5: 2,
+        6: 2,
+        7: 2,
+        8: 2,
+        9: 2,
+        10: 4,
+        11: 4,
+        12: 3,
+        13: 3,
         14: 5,
-        15: 6, 16: 6,
+        15: 6,
+        16: 6,
     };
-    return (categoryMap[detail] || null);
+    return categoryMap[detail] || null;
 }
 
-function initResult(req)
-{
+function initResult(req) {
     var result = {
         id: Number(req.body.id),
         date: req.body.date,
@@ -35,10 +44,10 @@ function initResult(req)
         detail: null,
         category: null,
         isCrime: Number(-1),
-        caseEndTime: "99:99:99",
-        departureTime: "99:99:99",
+        caseEndTime: '99:99:99',
+        departureTime: '99:99:99',
     };
-    return (result);
+    return result;
 }
 
 function uploadToStorage(req) {
@@ -94,8 +103,7 @@ async function uploadToAI(url) {
 }
 
 router.post('/', upload.single('sound'), async (req, res) => {
-    if (!req.file)
-        console.log('File is not provided');
+    if (!req.file) console.log('File is not provided');
 
     var result = initResult(req);
 
@@ -103,20 +111,17 @@ router.post('/', upload.single('sound'), async (req, res) => {
 
     result.detail = Number(await uploadToAI(result.sound));
     result.category = Number(detailToCategory(result.detail));
-    if (result.category != 6)
-    {
+    if (result.category != 6) {
         const itemRef = userRef.child(result.id.toString());
         itemRef.set(result, (error) => {
             if (error)
                 console.error('Error adding user with custom title:', error);
         });
         res.send(result);
-    }
-    else
-        console.log("no issue!");
+    } else console.log('no issue!');
 });
 
-router.get('/', function(req, res, next) {
+router.get('/', function (req, res, next) {
     res.render('index', { title: 'rasberry' });
 });
 

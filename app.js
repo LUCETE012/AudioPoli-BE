@@ -17,10 +17,7 @@ admin.initializeApp({
 
 exports.admin = admin;
 
-var indexRouter = require('./routes/index');
-var distinctRouter = require('./routes/distinction');
 var rasberryRouter = require('./routes/rasberry');
-var pushRouter = require('./routes/push');
 const { promiseHooks } = require('v8');
 
 var app = express();
@@ -35,10 +32,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', indexRouter);
-app.use('/distinction', distinctRouter);
 app.use('/rasberry', rasberryRouter);
-app.use('/push', pushRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

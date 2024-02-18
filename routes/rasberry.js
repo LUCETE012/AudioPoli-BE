@@ -8,15 +8,13 @@ var {Storage} = require('@google-cloud/storage');
 dotenv.config();
 var admin = require('firebase-admin');
 
-// global.serviceAccount = require('../audiopoli-28904-firebase-adminsdk-t43gt-10e01b1c11.json');
-var serviceAccount = require('../audiopoli-6b817-firebase-adminsdk-qqe2o-cc608bd744.json');
+var serviceAccount = require(process.env.SERVICEACCOUNT);
 const { response } = require('../app');
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    storageBucket: 'gs://audiopoli-6b817.appspot.com',
-    // databaseURL: 'https://audiopoli-28904-default-rtdb.firebaseio.com',
-    databaseURL: "https://audiopoli-6b817-default-rtdb.firebaseio.com",
+    storageBucket: process.env.BUCKETURL,
+    databaseURL: process.env.DBURL,
 });
 
 const db = admin.database();
@@ -114,15 +112,14 @@ router.post('/', upload.single('sound'), async (req, res) => {
 
     result.sound = await uploadToStorage(req);
 
-    uploadToAI(result.sound);
-    // result.detail = Number(uploadToAI(result.sound));
-    // result.category = Number(detailToCategory(result.detail));
+    result.detail = Number(uploadToAI(result.sound));
+    result.category = Number(detailToCategory(result.detail));
     
-    // const itemRef = userRef.child(result.id.toString());
-    // itemRef.set(result, (error) => {
-    //     if (error)
-    //         console.error('Error adding user with custom title:', error);
-    // });
+    const itemRef = userRef.child(result.id.toString());
+    itemRef.set(result, (error) => {
+        if (error)
+            console.error('Error adding user with custom title:', error);
+    });
     res.send(result);
 });
 

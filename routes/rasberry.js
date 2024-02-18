@@ -2,25 +2,25 @@ var express = require('express');
 var router = express.Router();
 var multer = require('multer');
 var path = require('path');
+const dotenv = require("dotenv");
 var {Storage} = require('@google-cloud/storage');
 
+dotenv.config();
 var admin = require('firebase-admin');
 
-// global.serviceAccount = require('../audiopoli-28904-firebase-adminsdk-t43gt-10e01b1c11.json');
-var serviceAccount = require('../audiopoli-6b817-firebase-adminsdk-qqe2o-cc608bd744.json');
+var serviceAccount = require(process.env.SERVICEACCOUNT);
 const { response } = require('../app');
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    storageBucket: 'gs://audiopoli-6b817.appspot.com',
-    // databaseURL: 'https://audiopoli-28904-default-rtdb.firebaseio.com',
-    databaseURL: "https://audiopoli-6b817-default-rtdb.firebaseio.com",
+    storageBucket: process.env.BUCKETURL,
+    databaseURL: process.env.DBURL,
 });
 
 const db = admin.database();
 const bucket = admin.storage().bucket();
 const upload = multer({storage: multer.memoryStorage()});
-const userRef = db.ref('/');
+const userRef = db.ref('/crime/');
 
 function detailToCategory(detail) {
     const categoryMap = {
@@ -45,7 +45,7 @@ function initResult(req)
         sound: null,
         detail: null,
         category: null,
-        isCrime: false,
+        isCrime: Number(-1),
         caseEndTime: "99:99:99",
         departureTime: "99:99:99",
     };
@@ -77,9 +77,31 @@ function uploadToStorage(req) {
     });
 }
 
-function uploadToAI(url)
-{
-    return (3);
+async function uploadToAI(url) {
+    const fetch = (await import('node-fetch')).default;
+    const gcfURL = process.env.GCFURL;
+
+    try {
+        const response = await fetch(gcfURL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ url: url }),
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        console.log(data.result);
+        return data.result;
+    } catch (error) {
+        console.error('Error calling Cloud Function:', error);
+        throw new Error('Failed to call Cloud Function');
+    }
 }
 
 router.post('/', upload.single('sound'), async (req, res) => {
@@ -90,15 +112,19 @@ router.post('/', upload.single('sound'), async (req, res) => {
 
     result.sound = await uploadToStorage(req);
 
-    result.detail = Number(uploadToAI(result.sound));
+    result.detail = Number(await uploadToAI(result.sound));
     result.category = Number(detailToCategory(result.detail));
-    
-    const itemRef = userRef.child(result.id.toString());
-    itemRef.set(result, (error) => {
-        if (error)
-            console.error('Error adding user with custom title:', error);
-    });
-    res.send(result);
+    if (result.category != 6)
+    {
+        const itemRef = userRef.child(result.id.toString());
+        itemRef.set(result, (error) => {
+            if (error)
+                console.error('Error adding user with custom title:', error);
+        });
+        res.send(result);
+    }
+    else
+        console.log("no issue!");
 });
 
 router.get('/', function(req, res, next) {

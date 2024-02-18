@@ -4,9 +4,19 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
+var admin = require('firebase-admin');
+var serviceAccount = require('./audiopoli-6b817-firebase-adminsdk-qqe2o-5863b9f7f0.json');
+
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    databaseURL: 'https://audiopoli-6b817-default-rtdb.firebaseio.com',
+});
+exports.admin = admin;
+
 var indexRouter = require('./routes/index');
 var distinctRouter = require('./routes/distinction');
 var rasberryRouter = require('./routes/rasberry');
+var pushRouter = require('./routes/push');
 
 var app = express();
 
@@ -23,6 +33,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', indexRouter);
 app.use('/distinction', distinctRouter);
 app.use('/rasberry', rasberryRouter);
+app.use('/push', pushRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
@@ -40,4 +51,4 @@ app.use(function (err, req, res, next) {
     res.render('error');
 });
 
-module.exports = app;
+exports.app = app;

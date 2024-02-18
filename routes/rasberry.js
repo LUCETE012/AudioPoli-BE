@@ -2,20 +2,9 @@ var express = require('express');
 var router = express.Router();
 var multer = require('multer');
 var path = require('path');
-const dotenv = require("dotenv");
-var {Storage} = require('@google-cloud/storage');
+var { Storage } = require('@google-cloud/storage');
 
-dotenv.config();
-var admin = require('firebase-admin');
-
-var serviceAccount = require(process.env.SERVICEACCOUNT);
-const { response } = require('../app');
-
-admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    storageBucket: process.env.BUCKETURL,
-    databaseURL: process.env.DBURL,
-});
+var { admin } = require('../app.js');
 
 const db = admin.database();
 const bucket = admin.storage().bucket();

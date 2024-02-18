@@ -20,7 +20,7 @@ admin.initializeApp({
 const db = admin.database();
 const bucket = admin.storage().bucket();
 const upload = multer({storage: multer.memoryStorage()});
-const userRef = db.ref('/');
+const userRef = db.ref('/crime/');
 
 function detailToCategory(detail) {
     const categoryMap = {
@@ -45,7 +45,7 @@ function initResult(req)
         sound: null,
         detail: null,
         category: null,
-        isCrime: false,
+        isCrime: Number(-1),
         caseEndTime: "99:99:99",
         departureTime: "99:99:99",
     };
@@ -112,7 +112,7 @@ router.post('/', upload.single('sound'), async (req, res) => {
 
     result.sound = await uploadToStorage(req);
 
-    result.detail = Number(uploadToAI(result.sound));
+    result.detail = Number(await uploadToAI(result.sound));
     result.category = Number(detailToCategory(result.detail));
     
     const itemRef = userRef.child(result.id.toString());

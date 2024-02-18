@@ -1,5 +1,7 @@
 node_modules/
 
 .DS_Store
+*.wav
 
-audiopoli-6b817-firebase-adminsdk-qqe2o-5863b9f7f0.json
+audiopoli-*.json
+*.env

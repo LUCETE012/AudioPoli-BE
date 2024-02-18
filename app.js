@@ -3,20 +3,25 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+const dotenv = require("dotenv");
+dotenv.config();
 
 var admin = require('firebase-admin');
-var serviceAccount = require('./audiopoli-6b817-firebase-adminsdk-qqe2o-5863b9f7f0.json');
+var serviceAccount = require(process.env.SERVICEACCOUNT);
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    databaseURL: 'https://audiopoli-6b817-default-rtdb.firebaseio.com',
+    storageBucket: process.env.BUCKETURL,
+    databaseURL: process.env.DBURL,
 });
+
 exports.admin = admin;
 
 var indexRouter = require('./routes/index');
 var distinctRouter = require('./routes/distinction');
 var rasberryRouter = require('./routes/rasberry');
 var pushRouter = require('./routes/push');
+const { promiseHooks } = require('v8');
 
 var app = express();
 

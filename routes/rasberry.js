@@ -117,8 +117,8 @@ router.post('/', upload.single('sound'), async (req, res) => {
             if (error)
                 console.error('Error adding user with custom title:', error);
         });
-        res.send(result);
     } else console.log('no issue!');
+    res.send(result);
 });
 
 router.get('/', function (req, res, next) {

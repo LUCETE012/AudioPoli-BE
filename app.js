@@ -66,7 +66,7 @@ const alertMessages = [
 ref.on(
     'child_changed',
     function (snapshot) {
-        if (snapshot.val().isCrime == 1) {
+        if (snapshot.val().isCrime == 1 && snapshot.val().departureTime[0] == '9') {
             const useRef = db.ref('/users');
             useRef.on(
                 'value',
